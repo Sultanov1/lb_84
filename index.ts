@@ -14,9 +14,9 @@ app.use('/users', userRouter)
 const run = async () => {
   await mongoose.connect(config.database)
 
-    app.listen(port, () => {
-        console.log(`Listening on port ${port}`);
-    });
+  app.listen(port, () => {
+    console.log('Listening on port', port);
+  })
 
   process.on('exit', () => {
     mongoose.disconnect();
