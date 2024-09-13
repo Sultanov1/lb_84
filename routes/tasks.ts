@@ -4,6 +4,7 @@ import {TaskMutation} from '../types';
 import User from '../models/User';
 
 const taskRouter = express.Router();
+const validStatuses = ['new', 'in_progress', 'complete'];
 
 taskRouter.get('/', async (req, res, next) => {
   try {
@@ -26,9 +27,8 @@ taskRouter.post('/', async (req, res, next) => {
 
     const task = new Task(taskData);
 
-    const validateStatuses = ['new', 'in_progress', 'complete'];
 
-    if (!validateStatuses.includes(req.body.status)) {
+    if (!validStatuses.includes(req.body.status)) {
       return res.status(400).json({error: 'Invalid status provided'});
     }
 
@@ -43,6 +43,38 @@ taskRouter.post('/', async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-})
+});
+
+  taskRouter.put('/:id', async (req, res ,next) => {
+    try {
+      const userId = req.body.user;
+      const taskId = req.params.id;
+
+      const task = await Task.findById(taskId);
+
+      if (!task) {
+        return res.status(404).json({error: 'Task not found'});
+      }
+
+      if (task.user.toString() !== userId) {
+        return res.status(403).json({error: 'You don\'t have permission to edit this task'})
+      }
+
+      if (!validStatuses.includes(req.body.status)) {
+        return res.status(400).json({error: 'Invalid status provided'});
+      }
+
+      task.title = req.body.title || task.title;
+      task.description = req.body.description || task.description;
+      task.status = req.body.status || task.status;
+
+      await task.save();
+
+      res.json(task);
+    } catch (error) {
+      next(error);
+    }
+  })
+
 
 export default taskRouter;
